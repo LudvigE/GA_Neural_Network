@@ -110,6 +110,32 @@ class Board:
                     else:
                         candidate = piece
                         pieces_in_row = 1
+
+        # Check diagonals: right to left
+        self.board = np.flip(self.board, axis=1)
+        for diagonal_offset in range(-self.board_rows+1, self.board_columns):
+            diagonal = self.board.diagonal(diagonal_offset)
+            candidate = 0
+            pieces_in_row = 0
+
+            # Just calculate if diagonal is long enough for someone to win on
+            # to avoid unnecessary calculations
+            if len(diagonal) >= self.pieces_in_row_to_win:
+                for piece in diagonal:
+                    if candidate == 0:
+                        candidate = piece
+                        if candidate != 0:
+                            pieces_in_row = 1
+                        continue
+                    
+                    if piece == candidate:
+                        pieces_in_row += 1
+
+                        if pieces_in_row == self.pieces_in_row_to_win:
+                            return candidate
+                    else:
+                        candidate = piece
+                        pieces_in_row = 1
             # Still more moves to make?
         if len(self.getMoves()) == 0:
             # It's a draw
@@ -123,6 +149,12 @@ class Board:
 
     def placePiece(self, column, row, piece):
         self.board[row][column] = piece
+
+    def setBoard(self, newBoard):
+        if len(newBoard) == self.board_rows and len(newBoard[0]) == self.board_columns:
+            self.board = np.array(newBoard)
+        else:
+            raise Exception(f"New board ({len(newBoard[0])}x{len(newBoard)}) is not the same size as old board ({self.board_columns}x{self.board_rows})")
 
 def simulateGame(p1=None, p2=None, rnd=0, board_columns=7, board_rows=6, pieces_in_row_to_win=4):
     history = []
@@ -157,7 +189,7 @@ def bestMove(board, model, player, rnd=0, board_columns=7, board_rows=6):
     
     # Make predictions for each possible move
     for i in range(len(moves)):
-        future = np.array(board)
+        future = np.array(board.getBoard())
         future[moves[i][1]][moves[i][0]] = player
         prediction = model.predict(future.reshape((-1, (board_columns*board_rows))))[0]
         if player == 1:
