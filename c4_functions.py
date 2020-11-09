@@ -20,7 +20,8 @@ class Board:
 
         # Format board to look more like a real board
         board = board[1:-1]
-        board = board.replace(' ', '')
+        board = board.replace('],', '\n')
+        board = board.replace(' [', '[')
         board = board.replace('.]', ']')
         board = board.replace('.', ' ')
 
