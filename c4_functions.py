@@ -54,6 +54,8 @@ class Board:
                     candidate = self.board[row][column]
                     if candidate != 0:
                         pieces_in_row = 1
+                    else:
+                        pieces_in_row = 0
                     continue
                 
                 if self.board[row][column] == candidate:
@@ -64,7 +66,7 @@ class Board:
                 else:
                     candidate = self.board[row][column]
                     if candidate == 0:
-                        pieces_in_row = 1
+                        pieces_in_row = 0
 
         # Check columns
         for column in range(self.board_columns):
@@ -113,9 +115,9 @@ class Board:
                         pieces_in_row = 1
 
         # Check diagonals: right to left
-        self.board = np.flip(self.board, axis=1)
+        tmp_board = np.flip(self.board, axis=1)
         for diagonal_offset in range(-self.board_rows+1, self.board_columns):
-            diagonal = self.board.diagonal(diagonal_offset)
+            diagonal = tmp_board.diagonal(diagonal_offset)
             candidate = 0
             pieces_in_row = 0
 
@@ -137,8 +139,9 @@ class Board:
                     else:
                         candidate = piece
                         pieces_in_row = 1
-            # Still more moves to make?
-        if len(self.getMoves()) == 0:
+        
+        # Still more moves to make?
+        if (len(self.getMoves()) == 0):
             # It's a draw
             return 0
         else:
@@ -229,6 +232,7 @@ def gameStats(games, player=1, board_columns=7, board_rows=6, pieces_in_row_to_w
     for game in games:
         board = movesToBoard(game, board_columns, board_rows, pieces_in_row_to_win)
         result = board.getWinner()
+
         if result == -1:
             continue
         elif result == player:
@@ -237,7 +241,7 @@ def gameStats(games, player=1, board_columns=7, board_rows=6, pieces_in_row_to_w
             stats["draw"] += 1
         else:
             stats["loss"] += 1
-    
+
     winPct = stats["win"] / len(games) * 100
     lossPct = stats["loss"] / len(games) * 100
     drawPct = stats["draw"] / len(games) * 100
