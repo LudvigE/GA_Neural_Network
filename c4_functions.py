@@ -17,14 +17,14 @@ class Board:
 
     def __str__(self):
         board = str(self.board)
-
+        
         # Format board to look more like a real board
         board = board[1:-1]
         board = board.replace('],', '\n')
         board = board.replace(' [', '[')
         board = board.replace('.]', ']')
         board = board.replace('.', ' ')
-
+        
         return board
 
     def getMoves(self):
@@ -43,102 +43,30 @@ class Board:
         return moves
 
     def getWinner(self):
-    
-        # Check rows
-        for row in range(self.board_rows):
-            candidate = 0
-            pieces_in_row = 0
-
-            for column in range(self.board_columns):
-                if candidate == 0:
-                    candidate = self.board[row][column]
-                    if candidate != 0:
-                        pieces_in_row = 1
-                    else:
-                        pieces_in_row = 0
-                    continue
-                
-                if self.board[row][column] == candidate:
-                    pieces_in_row += 1
-
-                    if pieces_in_row == self.pieces_in_row_to_win:
-                        return candidate
-                else:
-                    candidate = self.board[row][column]
-                    if candidate == 0:
-                        pieces_in_row = 0
-
-        # Check columns
-        for column in range(self.board_columns):
-            candidate = 0
-            pieces_in_row = 0
-
-            for row in range(self.board_rows):
-                if candidate == 0:
-                    candidate = self.board[row][column]
-                    if candidate != 0:
-                        pieces_in_row = 1
-                    continue
-                
-                if self.board[row][column] == candidate:
-                    pieces_in_row += 1
-
-                    if pieces_in_row == self.pieces_in_row_to_win:
-                        return candidate
-                else:
-                    candidate = self.board[row][column]
-                    pieces_in_row = 1
-
-        # Check diagonals: left to right
-        for diagonal_offset in range(-self.board_rows+1, self.board_columns):
-            diagonal = self.board.diagonal(diagonal_offset)
-            candidate = 0
-            pieces_in_row = 0
-
-            # Just calculate if diagonal is long enough for someone to win on
-            # to avoid unnecessary calculations
-            if len(diagonal) >= self.pieces_in_row_to_win:
-                for piece in diagonal:
-                    if candidate == 0:
-                        candidate = piece
-                        if candidate != 0:
-                            pieces_in_row = 1
-                        continue
-                    
-                    if piece == candidate:
-                        pieces_in_row += 1
-
-                        if pieces_in_row == self.pieces_in_row_to_win:
-                            return candidate
-                    else:
-                        candidate = piece
-                        pieces_in_row = 1
-
-        # Check diagonals: right to left
-        tmp_board = np.flip(self.board, axis=1)
-        for diagonal_offset in range(-self.board_rows+1, self.board_columns):
-            diagonal = tmp_board.diagonal(diagonal_offset)
-            candidate = 0
-            pieces_in_row = 0
-
-            # Just calculate if diagonal is long enough for someone to win on
-            # to avoid unnecessary calculations
-            if len(diagonal) >= self.pieces_in_row_to_win:
-                for piece in diagonal:
-                    if candidate == 0:
-                        candidate = piece
-                        if candidate != 0:
-                            pieces_in_row = 1
-                        continue
-                    
-                    if piece == candidate:
-                        pieces_in_row += 1
-
-                        if pieces_in_row == self.pieces_in_row_to_win:
-                            return candidate
-                    else:
-                        candidate = piece
-                        pieces_in_row = 1
+        piece = 1
+        MAXKOLUMB=7
+        MAXRAD=6
+        board = self.board
+        for piece in range(1,3,1):
+            for c in range(MAXKOLUMB-3):
+                for r in range(MAXRAD):
+                    if board[r][c] == piece and board[r][c+1] == piece and board[r][c+2] == piece and board[r][c+3] == piece:
+                        return piece
+        #Check Lodräta
+            for r in range(MAXRAD-3):
+                for c in range(MAXKOLUMB):
+                    if board[r][c] == piece and board[r+1][c] == piece and board[r+2][c] == piece and board[r+3][c] == piece:
+                        return piece
+        #+ Digonalen 
+            for c in range(MAXKOLUMB-3):
+                for r in range(MAXRAD-3):
+                    if board[r][c] == piece and board[r+1][c+1] == piece and board[r+2][c+2] == piece and board[r+3][c+3] == piece:
+                        return piece
+        #- Digonalen
+            for c in range(MAXKOLUMB-3):
+                for r in range(3, MAXRAD):
+                    if board[r][c] == piece and board[r-1][c+1] == piece and board[r-2][c+2] == piece and board[r-3][c+3] == piece:
+                        return piece                     
         
         # Still more moves to make?
         if (len(self.getMoves()) == 0):
@@ -164,27 +92,41 @@ def simulateGame(p1=None, p2=None, rnd=0, board_columns=7, board_rows=6, pieces_
     history = []
     board = Board(board_columns, board_rows, pieces_in_row_to_win)
     playerToMove = 1
-    
+   
     while board.getWinner() == -1:
         # Choose a move (random or use a player model if provided)
         move = None
         if playerToMove == 1 and p1 != None:
             move = bestMove(board, p1, playerToMove, rnd, board_rows, board_columns)
-        elif playerToMove == 2 and p2 != None:
+        elif playerToMove == 2 and p2 != None and p2 != "Player":
             move = bestMove(board, p2, playerToMove, rnd, board_rows, board_columns)
+        elif playerToMove == 2 and p2 == "Player":
+            print(board)
+            #print(Board.getMoves(board))
+            moved =False
+            while moved == False:
+                val=int(input("Välj en Move"))
+                possible = []
+                posible = Board.getMoves(board)
+                print(posible)
+                for i in range(len(posible)):
+                    pos =posible[i]
+                    if val == pos[0]:
+                        move = pos
+                        moved= True
+                        print(move)
+                #print(board.getWinner())
         else:
             moves = board.getMoves()
             move = moves[random.randint(0, len(moves) - 1)]
         
-        # Make the move
+      
         board.placePiece(move[0], move[1], playerToMove)
-        
-        # Add the move to the history
+    
         history.append((playerToMove, move))
-
         # Switch the active player
         playerToMove = 1 if playerToMove == 2 else 2
-
+        #print("playing games")
     return history
 
 def bestMove(board, model, player, rnd=0, board_columns=7, board_rows=6):
@@ -250,3 +192,5 @@ def gameStats(games, player=1, board_columns=7, board_rows=6, pieces_in_row_to_w
     print(f"Wins: {stats['win']} ({winPct}%)")
     print(f"Loss: {stats['loss']} ({lossPct}%)")
     print(f"Draw: {stats['draw']} ({drawPct}%)")
+
+
